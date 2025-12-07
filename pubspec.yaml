@@ -1,18 +1,24 @@
-name: access_app
-description: "App de Acessibilidade em Flutter"
-publish_to: 'none'
-version: 1.0.0+1
-environment:
-  sdk: '>=3.0.0 <4.0.0'
-dependencies:
-  flutter:
-    sdk: flutter
-  cupertino_icons: ^1.0.2
-  image_picker: ^1.0.4
-  permission_handler: ^11.4.4
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^3.0.0
-flutter:
-  uses-material-design: true
+name: Chat 24/7
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '*/30 * * * *'  # reinicia a cada 30min (ngrok free morre em 2h)
+
+jobs:
+  run-chat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instala Python
+        run: sudo apt update && sudo apt install python3 -y
+      - name: Baixa ngrok
+        run: wget https://bin.equinox.io/c/bNyj1mQggKj/ngrok-v3-stable-linux-amd64.tgz && tar xvzf ngrok-v3-stable-linux-amd64.tgz
+      - name: Inicia ngrok + servidor
+        run: |
+          ./ngrok config add-authtoken SEU_TOKEN_NGROK_AQUI
+          ./ngrok tcp 6666 --log=stdout > ngrok.log &
+          sleep 10
+          echo "IP PRA CONECTAR:"
+          curl -s http://localhost:4040/api/tunnels | grep -o "tcp://[0-9a-z.-]*:[0-9]*"
+          python3 Server.py
